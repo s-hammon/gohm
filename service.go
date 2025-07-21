@@ -7,6 +7,7 @@ import (
 	"net/http"
 
 	"cloud.google.com/go/bigquery"
+	"github.com/s-hammon/gohm/pkg/hl7"
 	"github.com/s-hammon/p"
 	"google.golang.org/api/healthcare/v1"
 )
@@ -82,7 +83,7 @@ func (s *Hl7Service) handleMessage(w http.ResponseWriter, r *http.Request) {
 		)
 		return
 	}
-	hl7, err := base64.StdEncoding.DecodeString(resp.Data)
+	hl7Msg, err := base64.StdEncoding.DecodeString(resp.Data)
 	if err != nil {
 		respondJSON(
 			w,
@@ -105,7 +106,7 @@ func (s *Hl7Service) handleMessage(w http.ResponseWriter, r *http.Request) {
 		return
 	case "ADT":
 		adt := ADT{}
-		if err = json.Unmarshal(hl7, &adt); err != nil {
+		if err = hl7.Unmarshal(hl7Msg, &adt); err != nil {
 			respondJSON(
 				w,
 				http.StatusInternalServerError,
@@ -114,7 +115,7 @@ func (s *Hl7Service) handleMessage(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 		adt.MsgPath = hl7Path
-		ins := dataset.Table("raw_adt").Inserter()
+		ins := dataset.Table("adt_raw").Inserter()
 		if err = ins.Put(context.Background(), adt); err != nil {
 			respondJSON(
 				w,
@@ -125,7 +126,7 @@ func (s *Hl7Service) handleMessage(w http.ResponseWriter, r *http.Request) {
 		}
 	case "ORM":
 		orm := ORM{}
-		if err = json.Unmarshal(hl7, &orm); err != nil {
+		if err = hl7.Unmarshal(hl7Msg, &orm); err != nil {
 			respondJSON(
 				w,
 				http.StatusInternalServerError,
@@ -134,7 +135,7 @@ func (s *Hl7Service) handleMessage(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 		orm.MsgPath = hl7Path
-		ins := dataset.Table("raw_orm").Inserter()
+		ins := dataset.Table("orm_raw").Inserter()
 		if err = ins.Put(context.Background(), orm); err != nil {
 			respondJSON(
 				w,
@@ -145,7 +146,7 @@ func (s *Hl7Service) handleMessage(w http.ResponseWriter, r *http.Request) {
 		}
 	case "ORU":
 		oru := ORU{}
-		if err = json.Unmarshal(hl7, &oru); err != nil {
+		if err = hl7.Unmarshal(hl7Msg, &oru); err != nil {
 			respondJSON(
 				w,
 				http.StatusInternalServerError,
@@ -154,7 +155,7 @@ func (s *Hl7Service) handleMessage(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 		oru.MsgPath = hl7Path
-		ins := dataset.Table("raw_oru").Inserter()
+		ins := dataset.Table("oru_raw").Inserter()
 		if err = ins.Put(context.Background(), oru); err != nil {
 			respondJSON(
 				w,
@@ -165,7 +166,7 @@ func (s *Hl7Service) handleMessage(w http.ResponseWriter, r *http.Request) {
 		}
 	case "MDM":
 		mdm := MDM{}
-		if err = json.Unmarshal(hl7, &mdm); err != nil {
+		if err = hl7.Unmarshal(hl7Msg, &mdm); err != nil {
 			respondJSON(
 				w,
 				http.StatusInternalServerError,
@@ -174,7 +175,7 @@ func (s *Hl7Service) handleMessage(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 		mdm.MsgPath = hl7Path
-		ins := dataset.Table("raw_mdm").Inserter()
+		ins := dataset.Table("mdm_raw").Inserter()
 		if err = ins.Put(context.Background(), mdm); err != nil {
 			respondJSON(
 				w,
